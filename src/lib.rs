@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{ BTreeMap, HashSet, HashMap };
 
 use wasm_bindgen::prelude::*;
 use js_sys::try_iter;
@@ -41,27 +41,32 @@ impl FuzzyMatcherBuilder {
 }
 
 pub struct WordIndex {
-    collection: BTreeMap::<String, Vec<usize>>,
+    collection: BTreeMap::<String, HashSet<usize>>,
 }
 
 impl WordIndex {
     pub fn new() -> WordIndex {
         WordIndex {
-            collection: BTreeMap::<String, Vec<usize>>::new(),
+            collection: BTreeMap::<String, HashSet<usize>>::new(),
         }
     }
 
     pub fn add_key(&mut self, key: String, index: usize) -> () {
         match self.collection.get_mut(&key) {
-            Some(value) => value.push(index),
+            Some(value) => {
+                value.insert(index);
+                ();
+            },
             None => {
-                self.collection.insert(key, vec!(index));
+                let mut new_set = HashSet::new();
+                new_set.insert(index);
+                self.collection.insert(key, new_set);
                 ()
             }
         }
     }
 
-    pub fn get(&self, key: &str) -> &Vec<usize> {
+    pub fn get(&self, key: &str) -> &HashSet<usize> {
         self.collection.get(key).unwrap()
     }
 }
@@ -95,23 +100,34 @@ impl FuzzyMatcher {
         }
     }
 
-    pub fn query(&self, keywords: String, distance: u32) -> () {
-        let mut matches = Vec::<usize>::new();
+    pub fn query(&self, keywords: String) -> () {
+        let mut count_matches: HashMap<usize, u32> = HashMap::new();
         for keyword in keywords.split_whitespace() {
-            let lev = Levenshtein::new(&keyword, distance).unwrap();
-            let mut stream = self.set.search(&lev).into_stream();
-            while let Some(k) = stream.next() {
-                let match_as_string = std::str::from_utf8(k).unwrap();
-                let indexes = self.word_index.get(&match_as_string);
-                for index in indexes {
-                    matches.push(*index)
-                }
+            for distance in 0..=2 {
+                match Levenshtein::new(&keyword, distance) {
+                    Ok(lev) => {
+                        let mut stream = self.set.search(&lev).into_stream();
+                        while let Some(k) = stream.next() {
+                            let match_as_string = std::str::from_utf8(k).unwrap();
+                            let indexes = self.word_index.get(&match_as_string);
+                            for index in indexes {
+                                *count_matches.entry(*index).or_insert(0) += 1;
+                            }
+                        }
+                    }
+                    Err(_) => { break; }
+                };
             }
         }
+
+        let mut count_vec: Vec<(&usize, &u32)> = count_matches.iter().collect();
+        count_vec.sort_by(|a, b| b.1.cmp(a.1));
+
         let mut response = vec!();
-        for result in &matches {
-            response.push(result.to_string());
+        for (index, _) in &count_vec {
+            response.push(index.to_string());
         }
+
         alert(&response.join(" "));
     }
 }

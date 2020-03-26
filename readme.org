@@ -1,19 +1,24 @@
 * Wasm Fuzzy Search
 Distance based search against phrases.
 
-Takes an array of strings. Returns a list of indexes with matches, based on proximity.
+Takes an array of strings. Returns a list of indexes with matches, with best match first.
 
 ** array of strings (phrases)
-index -> phrase
+FuzzyMatcher's constructor gets a JavaScript Array {string[]}.
+index of array identifies a phrase
 
 ** seperate phrase into words
-word -> Vec<index> // BTreeMap sorts the keys
+FuzzyMatcher's constructor iterates over the JavaScript array, extracts Javascript strings and splits them with using whitespaces. Add every word to the BTreeMap structure provided by the WordIndex. Each word maps to a HashSet of indexes that refer to the index of the phrases array.
+
+*** TODO allow customization of seperator
 
 ** index  all the words
+WordIndex uses a BTreeMap collection which sorts the keys (each word) as we collect them. FuzzyMatcher's constructor iterates over the keys and inserts them it to the finite state acceptor that FuzzyMatcherBuilder provides. 
 
-** seperate query into keywords 
+** seperate query into keywords
+FuzzyMatcher's query method gets a string, and seperates the query into keywords using white space.
 
-** query keywords with increasing distance
+** TODO query keywords with increasing distance
 heuristic scoring based on lenght of match and distance
 
 ** count matching indexes, sort and return
