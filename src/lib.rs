@@ -100,7 +100,7 @@ impl FuzzyMatcher {
         }
     }
 
-    pub fn query(&self, keywords: String) -> () {
+    pub fn query(&self, keywords: String) -> String {
         let mut count_matches: HashMap<usize, u32> = HashMap::new();
         for keyword in keywords.split_whitespace() {
             for distance in 0..=2 {
@@ -110,8 +110,14 @@ impl FuzzyMatcher {
                         while let Some(k) = stream.next() {
                             let match_as_string = std::str::from_utf8(k).unwrap();
                             let indexes = self.word_index.get(&match_as_string);
+                            let increment = match distance {
+                                0 => 7,
+                                1 => 3,
+                                2 => 1,
+                                _ => 0,
+                            };
                             for index in indexes {
-                                *count_matches.entry(*index).or_insert(0) += 1;
+                                *count_matches.entry(*index).or_insert(0) += increment;
                             }
                         }
                     }
@@ -119,15 +125,12 @@ impl FuzzyMatcher {
                 };
             }
         }
-
         let mut count_vec: Vec<(&usize, &u32)> = count_matches.iter().collect();
         count_vec.sort_by(|a, b| b.1.cmp(a.1));
-
         let mut response = vec!();
         for (index, _) in &count_vec {
             response.push(index.to_string());
         }
-
-        alert(&response.join(" "));
+        response.join(" ")
     }
 }
