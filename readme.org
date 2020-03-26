@@ -1,0 +1,19 @@
+* Wasm Fuzzy Search
+Distance based search against phrases.
+
+Takes an array of strings. Returns a list of indexes with matches, based on proximity.
+
+** array of strings (phrases)
+index -> phrase
+
+** seperate phrase into words
+word -> Vec<index> // BTreeMap sorts the keys
+
+** index  all the words
+
+** seperate query into keywords 
+
+** query keywords with increasing distance
+heuristic scoring based on lenght of match and distance
+
+** count matching indexes, sort and return
