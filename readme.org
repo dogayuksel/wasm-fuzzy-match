@@ -8,7 +8,7 @@ FuzzyMatcher's constructor gets a JavaScript Array {string[]}.
 index of array identifies a phrase
 
 ** seperate phrase into words
-FuzzyMatcher's constructor iterates over the JavaScript array, extracts Javascript strings and splits them with using whitespaces. Add every word to the BTreeMap structure provided by the WordIndex. Each word maps to a HashSet of indexes that refer to the index of the phrases array.
+FuzzyMatcher's constructor iterates over the JavaScript array, extracts Javascript strings and splits them with using whitespaces and converts them to lowercase. Then add every word to the BTreeMap structure provided by the WordIndex. Each word maps to a HashSet of indexes that refer to the index of the phrases array.
 
 *** TODO allow customization of seperator
 
@@ -18,7 +18,8 @@ WordIndex uses a BTreeMap collection which sorts the keys (each word) as we coll
 ** seperate query into keywords
 FuzzyMatcher's query method gets a string, and seperates the query into keywords using white space.
 
-** TODO query keywords with increasing distance
-heuristic scoring based on lenght of match and distance
+** query keywords with increasing distance
+FuzzyMatcher's query method performs an heuristic scoring based on lenght of match and distance. Collects matching indexes and sums the score.
 
 ** count matching indexes, sort and return
+Sort based on score and return matching indexes in order.
